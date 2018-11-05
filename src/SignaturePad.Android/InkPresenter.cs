@@ -12,6 +12,9 @@ namespace Xamarin.Controls
 {
 	partial class InkPresenter : View
 	{
+		// this class is mainly used to receives all the touches
+		private SignatureComponent signComp = new SignatureComponent();
+
 		static InkPresenter ()
 		{
 			// we may be in a designer
@@ -73,6 +76,9 @@ namespace Xamarin.Controls
 			// update the dirty rectangle
 			ResetBounds (touchX, touchY);
 			Invalidate (DirtyRect);
+
+			// convert the touches data for the use of recognition
+			signComp.TouchStart (e);
 		}
 
 		private void TouchesMoved (MotionEvent e, bool update = true)
