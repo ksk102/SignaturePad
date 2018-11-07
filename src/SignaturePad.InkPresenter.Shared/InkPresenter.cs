@@ -108,6 +108,8 @@ namespace Xamarin.Controls
 			currentPath = null;
 
 			this.Invalidate ();
+
+			signComp.Clear ();
 		}
 
 		public void AddStroke (NativePoint[] strokePoints, NativeColor color, float width)

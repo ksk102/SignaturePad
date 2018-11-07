@@ -18,6 +18,7 @@ namespace Xamarin.Controls
 		public int numStrokes = 0;
 		public long? startTime = null;
 		private long? lastBegin = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
+		private long? lastEnd = null;
 		public int? lastOrientation = null;
 		public int? lastAcceleration = null;
 		private List<int?> orientationOverTime = new List<int?> () { null };
@@ -26,7 +27,7 @@ namespace Xamarin.Controls
 		//public string normalizedOrientation = [];
 		//public string normalizedAcceleration = [];
 		//private string touchesOverTime = [];
-		//private string lastEnd = null;
+		
 		//private string secondLastEnd = null;
 
 		// convert the touches data for the use of recognition
@@ -72,6 +73,16 @@ namespace Xamarin.Controls
 			touchPoint.Put ("pressure", force);
 
 			AddTouchPoint (touchPoint, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+		}
+
+		public void TouchEnd (MotionEvent e)
+		{
+			lastEnd = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
+		}
+
+		public void Clear ()
+		{
+			numStrokes = 0;
 		}
 
 		private int GetIndexForTimestamp (long? timestamp)
