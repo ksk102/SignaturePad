@@ -58,6 +58,22 @@ namespace Xamarin.Controls
 			AddTouchPoint (touchPoint, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
 		}
 
+		public void TouchMove (MotionEvent e)
+		{
+			// obtain the location and pressure of the touch
+			var x = e.GetX ();
+			var y = e.GetY ();
+			var force = e.GetPressure (0);
+
+			var touchPoint = new JSONObject ();
+			touchPoint.Put ("timestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+			touchPoint.Put ("x", x);
+			touchPoint.Put ("y", y);
+			touchPoint.Put ("pressure", force);
+
+			AddTouchPoint (touchPoint, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+		}
+
 		private int GetIndexForTimestamp (long? timestamp)
 		{
 			if (startTime == null)

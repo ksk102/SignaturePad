@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Android.App;
@@ -124,6 +124,8 @@ namespace Xamarin.Controls
 			{
 				Invalidate (DirtyRect);
 			}
+
+			signComp.TouchMove (e);
 		}
 
 		private void TouchesEnded (MotionEvent e)
