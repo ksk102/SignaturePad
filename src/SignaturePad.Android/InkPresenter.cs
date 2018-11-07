@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Android.App;
@@ -12,9 +12,6 @@ namespace Xamarin.Controls
 {
 	partial class InkPresenter : View
 	{
-		// this class is mainly used to receives all the touches
-		private SignatureComponent signComp = new SignatureComponent();
-
 		static InkPresenter ()
 		{
 			// we may be in a designer
@@ -78,6 +75,7 @@ namespace Xamarin.Controls
 			Invalidate (DirtyRect);
 
 			// convert the touches data for the use of recognition
+			signComp = new SignatureComponent ();
 			signComp.TouchStart (e);
 		}
 

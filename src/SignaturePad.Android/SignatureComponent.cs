@@ -25,8 +25,6 @@ namespace Xamarin.Controls
 		public JSONArray normalizedTouches = new JSONArray ();
 		//public string normalizedOrientation = [];
 		//public string normalizedAcceleration = [];
-		//private string canvas: ElementRef;
-		private JSONObject currentTouch = new JSONObject ();
 		//private string touchesOverTime = [];
 		//private string lastEnd = null;
 		//private string secondLastEnd = null;
@@ -58,10 +56,6 @@ namespace Xamarin.Controls
 			touchPoint.Put ("pressure", force);
 
 			AddTouchPoint (touchPoint, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
-
-			currentTouch.Put ("id", e.GetPointerId (0));
-			currentTouch.Put ("x", x);
-			currentTouch.Put ("y", y);
 		}
 
 		private int GetIndexForTimestamp (long? timestamp)
