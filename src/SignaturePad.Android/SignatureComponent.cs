@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using Android.Views;
+
+using Org.Json;
 
 namespace Xamarin.Controls
 {
@@ -12,23 +15,21 @@ namespace Xamarin.Controls
 	 */
 	class SignatureComponent
 	{
+		public int numStrokes = 0;
 		public long? startTime = null;
+		private long? lastBegin = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
 		public int? lastOrientation = null;
 		public int? lastAcceleration = null;
-		//private string canvas: ElementRef;
-		private List<Dictionary<string, double>> currentTouch = new List<Dictionary<string, double>> ();
-		//private string touchesOverTime = [];
 		private List<int?> orientationOverTime = new List<int?> () { null };
 		private List<int?> accelerationOverTime = new List<int?> () { null };
-		public int numStrokes = 0;
-		private long? lastBegin = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
-		//private string lastEnd = null;
-		//private string secondLastEnd = null;
-		public List<Dictionary<string, double?>> normalizedTouches = new List<Dictionary<string, double?>> {
-			{ new Dictionary<string, double?>{ { "0", null } } }
-		};
+		public JSONArray normalizedTouches = new JSONArray ();
 		//public string normalizedOrientation = [];
 		//public string normalizedAcceleration = [];
+		//private string canvas: ElementRef;
+		private JSONObject currentTouch = new JSONObject ();
+		//private string touchesOverTime = [];
+		//private string lastEnd = null;
+		//private string secondLastEnd = null;
 
 		// convert the touches data for the use of recognition
 		public void TouchStart (MotionEvent e)
@@ -39,8 +40,8 @@ namespace Xamarin.Controls
 			{
 				startTime = lastBegin;
 				var index = GetIndexForTimestamp (lastBegin);
-				AddEntryToArrayAtIndex (lastOrientation, orientationOverTime, index);
-				AddEntryToArrayAtIndex (lastAcceleration, accelerationOverTime, index);
+				AddEntryToArrayAtIndex (lastOrientation, ref orientationOverTime, index);
+				AddEntryToArrayAtIndex (lastAcceleration, ref accelerationOverTime, index);
 			}
 
 			numStrokes++;
@@ -50,38 +51,33 @@ namespace Xamarin.Controls
 			var y = e.GetY ();
 			var force = e.GetPressure (0);
 
-			var touchPointDict = new Dictionary<string, double?>
-			{
-				{ "timestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds () },
-				{ "x", x },
-				{ "y", y },
-				{ "pressure", force }
-			};
+			var touchPoint = new JSONObject ();
+			touchPoint.Put ("timestamp", DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+			touchPoint.Put ("x", x);
+			touchPoint.Put ("y", y);
+			touchPoint.Put ("pressure", force);
 
-			AddTouchPoint (touchPointDict, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+			AddTouchPoint (touchPoint, DateTimeOffset.Now.ToUnixTimeMilliseconds ());
 
-			currentTouch.Add (new Dictionary<string, double>
-			{
-				{ "id", e.GetPointerId(0) },
-				{ "x", x },
-				{ "y", y }
-			});
+			currentTouch.Put ("id", e.GetPointerId (0));
+			currentTouch.Put ("x", x);
+			currentTouch.Put ("y", y);
 		}
 
 		private int GetIndexForTimestamp (long? timestamp)
 		{
-			if (startTime == 0)
+			if (startTime == null)
 			{
-				return -1;
+				throw new ArgumentNullException ("startTime cannot be null");
 			}
 
-			int diff = (int) (timestamp - startTime);
-			int index = (int) (Math.Floor ((double)(diff / 10)));
+			var diff = (int) (timestamp - startTime);
+			var index = (int) (Math.Floor (diff / 10.0));
 
 			return index;
 		}
 
-		private void AddEntryToArrayAtIndex (int? entry, List<int?> array, int index, int? filler = null)
+		private void AddEntryToArrayAtIndex (int? entry, ref List<int?> array, int index, int? filler = null)
 		{
 			var arrayLength = (array.Count == 1) ? 0 : array.Count;
 			if (arrayLength >= index)
@@ -107,40 +103,26 @@ namespace Xamarin.Controls
 			}
 		}
 
-		private void AddEntryToArrayAtIndex (Dictionary<string, double?> entry, List<Dictionary<string, double?>> array, int index, int? filler = null)
+		private void AddEntryToArrayAtIndex (JSONObject entry, ref JSONArray array, int index, int? filler = null)
 		{
-			var arrayLength = (array.Count == 1) ? 0 : array.Count;
-			if (arrayLength >= index)
+			var arrayLength = array.Length();
+			if (!array.IsNull (index))
 			{
-				if ((array[index])["" + index] != null)
-				{
-					return;
-				}
+				return;
 			}
 
 			for (var i = arrayLength; i < index; i++)
 			{
-				array.Add (new Dictionary<string, double?>
-				{
-					{ "" + i, filler }
-				});
+				array.Put (filler);
 			}
 
-			try
-			{
-				array[index] = entry;
-			}
-			catch (ArgumentOutOfRangeException)
-			{
-				array.Add (entry);
-			}
-			
+			array.Put (entry);
 		}
 
-		private void AddTouchPoint(Dictionary<string, double?> touchpoint, long timestamp)
+		private void AddTouchPoint(JSONObject touchpoint, long timestamp)
 		{
 			var index = GetIndexForTimestamp (timestamp);
-			AddEntryToArrayAtIndex (touchpoint, normalizedTouches, index);
+			AddEntryToArrayAtIndex (touchpoint, ref normalizedTouches, index);
 		}
 	}
 }
