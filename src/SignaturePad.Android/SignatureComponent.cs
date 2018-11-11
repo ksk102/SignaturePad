@@ -227,5 +227,92 @@ namespace Xamarin.Controls
 				}
 			}
 		}
+
+		public JSONArray GetTouches ()
+		{
+			return normalizedTouches;
+		}
+
+		public JSONArray GetOrientation ()
+		{
+			var cutOrientation = JsonArrayRemoveFrom (normalizedOrientation, GetTouches ().Length ());
+
+			while (cutOrientation.Length () < GetTouches ().Length ())
+			{
+				cutOrientation.Put (lastOrientation);
+			}
+
+			return cutOrientation;
+		}
+
+		public JSONArray GetAcceleration ()
+		{
+			var cutAcceleration = JsonArrayRemoveFrom (normalizedAcceleration, GetTouches ().Length ());
+
+			while (cutAcceleration.Length() < GetTouches ().Length ())
+			{
+				cutAcceleration.Put (null);
+			}
+
+			return cutAcceleration;
+		}
+
+		public double GetWidth ()
+		{
+			GetMinMaxFor ("x", out var min, out var max);
+			return Math.Round(max - min);
+		}
+
+		public double GetHeight ()
+		{
+			GetMinMaxFor ("y", out var min, out var max);
+			return Math.Round (max - min);
+		}
+
+		public void GetMinMaxFor (string variable, out double min, out double max)
+		{
+			max = 0.0;
+			min = 99999.99;
+			var len = GetTouches ().Length ();
+
+			for (var i = 0; i < len; i++)
+			{
+				if (!GetTouches ().IsNull (i))
+				{
+					var jsonObject = GetTouches ().OptJSONObject (i);
+					if (jsonObject.OptDouble (variable) < min)
+					{
+						min = jsonObject.OptDouble (variable);
+					}
+
+					if (jsonObject.OptDouble (variable) > max)
+					{
+						max = jsonObject.OptDouble (variable);
+					}
+				}
+			}
+		}
+
+		public int GetNumStrokes ()
+		{
+			return numStrokes;
+		}
+
+		public JSONArray JsonArrayRemoveFrom (JSONArray array, int index)
+		{
+			if (array.Length() <= index)
+			{
+				return array;
+			}
+
+			var newArray = new JSONArray ();
+
+			for (var i = 0; i < index; i++)
+			{
+				newArray.Put (array.Opt(i));
+			}
+
+			return newArray;
+		}
 	}
 }
