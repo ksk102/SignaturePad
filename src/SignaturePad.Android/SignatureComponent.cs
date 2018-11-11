@@ -103,6 +103,10 @@ namespace Xamarin.Controls
 
 		public void Clear ()
 		{
+			startTime = null;
+			normalizedTouches = null;
+			normalizedOrientation = null;
+			normalizedAcceleration = null;
 			numStrokes = 0;
 		}
 
