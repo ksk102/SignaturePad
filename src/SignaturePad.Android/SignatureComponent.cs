@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 
 using Android.Views;
+using Android.Hardware;
+using Android.App;
+using Android.Content;
 
 using Org.Json;
 
@@ -13,22 +16,35 @@ namespace Xamarin.Controls
 	/** This class receive all touches wiht their respective x, y coordinates and eventually the pressure
 	 * it stores the values and normalizes them
 	 */
-	class SignatureComponent
+	class SignatureComponent : Activity, ISensorEventListener
 	{
+		private SensorManager sensorManager;
 		public int numStrokes = 0;
 		public long? startTime = null;
 		private long? lastBegin = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
 		private long? lastEnd = null;
-		public int? lastOrientation = null;
-		public int? lastAcceleration = null;
-		private List<int?> orientationOverTime = new List<int?> () { null };
-		private List<int?> accelerationOverTime = new List<int?> () { null };
+		public float? lastOrientation = null;
+		public float? lastAcceleration = null;
+		private List<float?> orientationOverTime = new List<float?> () { null };
+		private List<float?> accelerationOverTime = new List<float?> () { null };
 		public JSONArray normalizedTouches = new JSONArray ();
-		//public string normalizedOrientation = [];
-		//public string normalizedAcceleration = [];
+		public JSONArray normalizedOrientation = new JSONArray ();
+		public JSONArray normalizedAcceleration = new JSONArray ();
 		//private string touchesOverTime = [];
-		
 		//private string secondLastEnd = null;
+
+		public SignatureComponent (Context context)
+		{
+			sensorManager = (SensorManager) context.GetSystemService (Context.SensorService);
+			sensorManager.RegisterListener (this, sensorManager.GetDefaultSensor (SensorType.Orientation), SensorDelay.Ui);
+		}
+
+		~SignatureComponent ()
+		{
+			sensorManager.UnregisterListener (this);
+			sensorManager.Dispose ();
+			sensorManager = null;
+		}
 
 		// convert the touches data for the use of recognition
 		public void TouchStart (MotionEvent e)
@@ -98,7 +114,7 @@ namespace Xamarin.Controls
 			return index;
 		}
 
-		private void AddEntryToArrayAtIndex (int? entry, ref List<int?> array, int index, int? filler = null)
+		private void AddEntryToArrayAtIndex (float? entry, ref List<float?> array, int index, float? filler = null)
 		{
 			var arrayLength = (array.Count == 1) ? 0 : array.Count;
 			if (arrayLength >= index)
@@ -124,9 +140,25 @@ namespace Xamarin.Controls
 			}
 		}
 
-		private void AddEntryToArrayAtIndex (JSONObject entry, ref JSONArray array, int index, int? filler = null)
+		private void AddEntryToArrayAtIndex (JSONObject entry, ref JSONArray array, int index, float? filler = null)
 		{
 			var arrayLength = array.Length();
+			if (!array.IsNull (index))
+			{
+				return;
+			}
+
+			for (var i = arrayLength; i < index; i++)
+			{
+				array.Put (filler);
+			}
+
+			array.Put (entry);
+		}
+
+		private void AddEntryToArrayAtIndex (float? entry, ref JSONArray array, int index, float? filler = null)
+		{
+			var arrayLength = array.Length ();
 			if (!array.IsNull (index))
 			{
 				return;
@@ -144,6 +176,27 @@ namespace Xamarin.Controls
 		{
 			var index = GetIndexForTimestamp (timestamp);
 			AddEntryToArrayAtIndex (touchpoint, ref normalizedTouches, index);
+		}
+
+		public void OnAccuracyChanged (Sensor sensor, SensorStatus accuracy)
+		{
+
+		}
+
+		public void OnSensorChanged (SensorEvent e)
+		{
+			var entry = e.Values[0];
+			lastOrientation = entry;
+
+			try
+			{
+				var index = GetIndexForTimestamp (DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+				AddEntryToArrayAtIndex (entry, ref normalizedOrientation, index, entry);
+			}
+			catch (ArgumentNullException)
+			{
+
+			}
 		}
 	}
 }

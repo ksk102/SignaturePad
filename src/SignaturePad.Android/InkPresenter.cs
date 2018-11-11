@@ -31,6 +31,7 @@ namespace Xamarin.Controls
 			: base (context)
 		{
 			Initialize ();
+			signComp = new SignatureComponent (context);
 		}
 
 		private void Initialize ()
@@ -74,8 +75,7 @@ namespace Xamarin.Controls
 			ResetBounds (touchX, touchY);
 			Invalidate (DirtyRect);
 
-			// convert the touches data for the use of recognition
-			signComp = new SignatureComponent ();
+			// convert the touches data for the use of 
 			signComp.TouchStart (e);
 		}
 
