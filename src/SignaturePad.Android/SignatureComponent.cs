@@ -23,10 +23,10 @@ namespace Xamarin.Controls
 		public long? startTime = null;
 		private long? lastBegin = DateTimeOffset.Now.ToUnixTimeMilliseconds ();
 		private long? lastEnd = null;
-		public float? lastOrientation = null;
-		public float? lastAcceleration = null;
-		private List<float?> orientationOverTime = new List<float?> () { null };
-		private List<float?> accelerationOverTime = new List<float?> () { null };
+		public double? lastOrientation = null;
+		public double? lastAcceleration = null;
+		private List<double?> orientationOverTime = new List<double?> () { null };
+		private List<double?> accelerationOverTime = new List<double?> () { null };
 		public JSONArray normalizedTouches = new JSONArray ();
 		public JSONArray normalizedOrientation = new JSONArray ();
 		public JSONArray normalizedAcceleration = new JSONArray ();
@@ -36,7 +36,12 @@ namespace Xamarin.Controls
 		public SignatureComponent (Context context)
 		{
 			sensorManager = (SensorManager) context.GetSystemService (Context.SensorService);
+
+			// Orientation
 			sensorManager.RegisterListener (this, sensorManager.GetDefaultSensor (SensorType.Orientation), SensorDelay.Ui);
+
+			// Acceleration
+			sensorManager.RegisterListener (this, sensorManager.GetDefaultSensor (SensorType.LinearAcceleration), SensorDelay.Ui);
 		}
 
 		~SignatureComponent ()
@@ -114,7 +119,7 @@ namespace Xamarin.Controls
 			return index;
 		}
 
-		private void AddEntryToArrayAtIndex (float? entry, ref List<float?> array, int index, float? filler = null)
+		private void AddEntryToArrayAtIndex (double? entry, ref List<double?> array, int index, double? filler = null)
 		{
 			var arrayLength = (array.Count == 1) ? 0 : array.Count;
 			if (arrayLength >= index)
@@ -140,7 +145,7 @@ namespace Xamarin.Controls
 			}
 		}
 
-		private void AddEntryToArrayAtIndex (JSONObject entry, ref JSONArray array, int index, float? filler = null)
+		private void AddEntryToArrayAtIndex (JSONObject entry, ref JSONArray array, int index, double? filler = null)
 		{
 			var arrayLength = array.Length();
 			if (!array.IsNull (index))
@@ -156,7 +161,7 @@ namespace Xamarin.Controls
 			array.Put (entry);
 		}
 
-		private void AddEntryToArrayAtIndex (float? entry, ref JSONArray array, int index, float? filler = null)
+		private void AddEntryToArrayAtIndex (double? entry, ref JSONArray array, int index, double? filler = null)
 		{
 			var arrayLength = array.Length ();
 			if (!array.IsNull (index))
@@ -185,17 +190,37 @@ namespace Xamarin.Controls
 
 		public void OnSensorChanged (SensorEvent e)
 		{
-			var entry = e.Values[0];
-			lastOrientation = entry;
+			var sensor = e.Sensor;
 
-			try
+			if (sensor.Type == SensorType.Orientation)
 			{
-				var index = GetIndexForTimestamp (DateTimeOffset.Now.ToUnixTimeMilliseconds ());
-				AddEntryToArrayAtIndex (entry, ref normalizedOrientation, index, entry);
+				var entry = e.Values[0];
+				lastOrientation = entry;
+
+				try
+				{
+					var index = GetIndexForTimestamp (DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+					AddEntryToArrayAtIndex (entry, ref normalizedOrientation, index, entry);
+				}
+				catch (ArgumentNullException)
+				{
+
+				}
 			}
-			catch (ArgumentNullException)
+			else if (sensor.Type == SensorType.LinearAcceleration)
 			{
+				var entry = Math.Sqrt (e.Values[0] * e.Values[0] + e.Values[1] * e.Values[1] + e.Values[2] * e.Values[2]);
+				lastAcceleration = entry;
 
+				try
+				{
+					var index = GetIndexForTimestamp (DateTimeOffset.Now.ToUnixTimeMilliseconds ());
+					AddEntryToArrayAtIndex (entry, ref normalizedAcceleration, index);
+				}
+				catch (ArgumentNullException)
+				{
+
+				}
 			}
 		}
 	}
