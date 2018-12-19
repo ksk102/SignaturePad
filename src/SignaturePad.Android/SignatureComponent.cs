@@ -30,8 +30,6 @@ namespace Xamarin.Controls
 		public JSONArray normalizedTouches = new JSONArray ();
 		public JSONArray normalizedOrientation = new JSONArray ();
 		public JSONArray normalizedAcceleration = new JSONArray ();
-		//private string touchesOverTime = [];
-		//private string secondLastEnd = null;
 
 		public SignatureComponent (Context context)
 		{
@@ -104,9 +102,9 @@ namespace Xamarin.Controls
 		public void Clear ()
 		{
 			startTime = null;
-			normalizedTouches = null;
-			normalizedOrientation = null;
-			normalizedAcceleration = null;
+			normalizedTouches = new JSONArray();
+			normalizedOrientation = new JSONArray ();
+			normalizedAcceleration = new JSONArray ();
 			numStrokes = 0;
 		}
 
