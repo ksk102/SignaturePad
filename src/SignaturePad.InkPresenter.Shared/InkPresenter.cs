@@ -36,6 +36,9 @@ namespace Xamarin.Controls
 		private readonly List<InkStroke> paths = new List<InkStroke> ();
 		private InkStroke currentPath;
 
+		// this class is mainly used to extract all the touches
+		private SignatureComponent signComp;
+
 		// used to determine rectangle that needs to be redrawn
 		private float dirtyRectLeft;
 		private float dirtyRectTop;
@@ -105,6 +108,8 @@ namespace Xamarin.Controls
 			currentPath = null;
 
 			this.Invalidate ();
+
+			signComp.Clear ();
 		}
 
 		public void AddStroke (NativePoint[] strokePoints, NativeColor color, float width)

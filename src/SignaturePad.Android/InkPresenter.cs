@@ -31,6 +31,7 @@ namespace Xamarin.Controls
 			: base (context)
 		{
 			Initialize ();
+			signComp = new SignatureComponent (context);
 		}
 
 		private void Initialize ()
@@ -73,6 +74,9 @@ namespace Xamarin.Controls
 			// update the dirty rectangle
 			ResetBounds (touchX, touchY);
 			Invalidate (DirtyRect);
+
+			// convert the touches data for the use of 
+			signComp.TouchStart (e);
 		}
 
 		private void TouchesMoved (MotionEvent e, bool update = true)
@@ -120,6 +124,8 @@ namespace Xamarin.Controls
 			{
 				Invalidate (DirtyRect);
 			}
+
+			signComp.TouchMove (e);
 		}
 
 		private void TouchesEnded (MotionEvent e)
